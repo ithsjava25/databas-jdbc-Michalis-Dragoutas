@@ -92,7 +92,6 @@ public class Main {
                 }
             } catch (SQLException e) {
                 System.err.println("Error accessing database during login: " + e.getMessage());
-                return false;
             }
 
             attempts++;
