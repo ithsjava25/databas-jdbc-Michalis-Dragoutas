@@ -69,27 +69,41 @@ public class Main {
     // Login
 
     private boolean handleLogin() {
-        System.out.print("Username: ");
-        String username = scanner.nextLine();
-        System.out.print("Password: ");
-        String password = scanner.nextLine();
-        try (Connection conn = getConnection()) {
-            String sql = "SELECT COUNT(*) FROM account WHERE name = ? AND password = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, username);
-                stmt.setString(2, password);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next() && rs.getInt(1) > 0) {
-                        return true;
+        int attempts = 0;
+        final int maxAttempts = 3;
+
+        while (attempts < maxAttempts) {
+            System.out.print("Username: ");
+            String username = scanner.nextLine();
+            System.out.print("Password: ");
+            String password = scanner.nextLine();
+
+            try (Connection conn = getConnection()) {
+                String sql = "SELECT COUNT(*) FROM account WHERE name = ? AND password = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setString(1, username);
+                    stmt.setString(2, password);
+
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next() && rs.getInt(1) > 0) {
+                            return true; // login successful
+                        }
                     }
                 }
+            } catch (SQLException e) {
+                System.err.println("Error accessing database during login: " + e.getMessage());
+                return false;
             }
-        } catch (SQLException e) {
-            System.err.println("Error accessing database during login: " + e.getMessage());
-            return false;
+
+            attempts++;
+            if (attempts < maxAttempts) {
+                System.out.println("Invalid username or password. Try again (" + (maxAttempts - attempts) + " attempts left).");
+            } else {
+                System.out.println("Invalid username or password. Maximum attempts reached. Exiting.");
+            }
         }
-        System.out.println("Invalid username or password.");
-        return false;
+
+        return false; // all attempts failed
     }
 
     // Menu
