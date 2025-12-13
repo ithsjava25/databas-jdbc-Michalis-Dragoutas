@@ -58,43 +58,13 @@ public class Main {
 
         //  Cleanup
         scanner.close();
+
+
     }
-
-    /**
-     * Determines if the application is running in development mode based on system properties,
-     * environment variables, or command-line arguments.
-     *
-     * @param args an array of command-line arguments
-     * @return {@code true} if the application is in development mode; {@code false} otherwise
-     */
-
-    private static boolean isDevMode(String[] args) {
-        if (Boolean.getBoolean("devMode"))
-            return true;
-        if ("true".equalsIgnoreCase(System.getenv("DEV_MODE")))
-            return true;
-        return Arrays.asList(args).contains("--dev");
-    }
-
-    /**
-     * Reads configuration with precedence: Java system property first, then environment variable.
-     * Returns trimmed value or null if neither source provides a non-empty value.
-     */
-
-    private static String resolveConfig(String propertyKey, String envKey) {
-        String v = System.getProperty(propertyKey);
-        if (v == null || v.trim().isEmpty()) {
-            v = System.getenv(envKey);
-        }
-        return (v == null || v.trim().isEmpty()) ? null : v.trim();
-    }
-
-
 
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
     }
-
     // Login
 
     private boolean handleLogin() {
@@ -312,4 +282,36 @@ public class Main {
             }
         }
     }
-}
+
+
+    /**
+     * Determines if the application is running in development mode based on system properties,
+     * environment variables, or command-line arguments.
+     *
+     * @param args an array of command-line arguments
+     * @return {@code true} if the application is in development mode; {@code false} otherwise
+     */
+
+    private static boolean isDevMode(String[] args) {
+        if (Boolean.getBoolean("devMode"))
+            return true;
+        if ("true".equalsIgnoreCase(System.getenv("DEV_MODE")))
+            return true;
+        return Arrays.asList(args).contains("--dev");
+    }
+
+    /**
+     * Reads configuration with precedence: Java system property first, then environment variable.
+     * Returns trimmed value or null if neither source provides a non-empty value.
+     */
+
+    private static String resolveConfig(String propertyKey, String envKey) {
+        String v = System.getProperty(propertyKey);
+        if (v == null || v.trim().isEmpty()) {
+            v = System.getenv(envKey);
+        }
+        return (v == null || v.trim().isEmpty()) ? null : v.trim();
+    }
+
+
+    }
