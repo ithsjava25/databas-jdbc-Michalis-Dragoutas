@@ -65,6 +65,7 @@ public class Main {
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
     }
+
     // Login
 
     private boolean handleLogin() {
@@ -182,6 +183,8 @@ public class Main {
         System.out.print("Enter year: ");
         int year = Integer.parseInt(scanner.nextLine().trim());
 
+        if(year < 1950 || year > 2100) { System.out.println("Invalid year"); return; }
+
         String sql = "SELECT COUNT(*) FROM moon_mission WHERE YEAR(launch_date) = ?";
 
         try (Connection conn = getConnection();
@@ -199,6 +202,20 @@ public class Main {
 
 
     // Option 4
+
+    private boolean usernameExists(String username) throws SQLException {
+        String sql = "SELECT 1 FROM account WHERE name = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next(); // true if a row exists
+            }
+        }
+    }
     private void createAccount() throws SQLException {
 
         System.out.print("Enter first name: ");
@@ -215,7 +232,21 @@ public class Main {
             System.out.println("First name and last name cannot be empty.");
             return;
         }
-        String username = firstName.substring(0, Math.min(firstName.length(), 3)) + lastName;
+
+        if(password.isEmpty()) {
+            System.out.println("Password cannot be empty.");
+            return;
+        }
+        String baseUsername =
+                firstName.substring(0, Math.min(firstName.length(), 3)) + lastName;
+
+        String username = baseUsername;
+        int suffix = 1;
+
+        while (usernameExists(username)) {
+            username = baseUsername + suffix;
+            suffix++;
+        }
 
         String sql = "INSERT INTO account (name, password, first_name, last_name, ssn) VALUES (?, ?, ?, ?, ?)";
 
@@ -267,6 +298,7 @@ public class Main {
 
         System.out.print("Enter user_id to delete: ");
         long userId = Long.parseLong(scanner.nextLine().trim());
+
 
         String sql = "DELETE FROM account WHERE user_id = ?";
 
