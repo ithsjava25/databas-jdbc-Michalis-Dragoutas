@@ -17,7 +17,7 @@ public class Main {
     private String dbPass;
     private Scanner scanner;
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         if (isDevMode(args)) {
             DevDatabaseInitializer.start();
         }
@@ -25,7 +25,7 @@ public class Main {
     }
 
     public void run() {
-        // Resolve DB settings and assign to instance fields
+        // Resolve DB settings with precedence: System properties -> Environment variables
         jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
         dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
         dbPass = resolveConfig("APP_DB_PASS", "APP_DB_PASS");
@@ -45,7 +45,7 @@ public class Main {
             throw new RuntimeException("Initial DB connection failed.", e);
         }
 
-        // Todo: Starting point for your code (CLI Logic)
+        // Todo: Starting point for your code
 
         // Login Control
         if (!handleLogin()) {
@@ -60,6 +60,13 @@ public class Main {
         scanner.close();
     }
 
+    /**
+     * Determines if the application is running in development mode based on system properties,
+     * environment variables, or command-line arguments.
+     *
+     * @param args an array of command-line arguments
+     * @return {@code true} if the application is in development mode; {@code false} otherwise
+     */
 
     private static boolean isDevMode(String[] args) {
         if (Boolean.getBoolean("devMode"))
@@ -68,6 +75,11 @@ public class Main {
             return true;
         return Arrays.asList(args).contains("--dev");
     }
+
+    /**
+     * Reads configuration with precedence: Java system property first, then environment variable.
+     * Returns trimmed value or null if neither source provides a non-empty value.
+     */
 
     private static String resolveConfig(String propertyKey, String envKey) {
         String v = System.getProperty(propertyKey);
@@ -90,13 +102,11 @@ public class Main {
         String username = scanner.nextLine();
         System.out.print("Password: ");
         String password = scanner.nextLine();
-
         try (Connection conn = getConnection()) {
             String sql = "SELECT COUNT(*) FROM account WHERE name = ? AND password = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
                 stmt.setString(2, password);
-
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next() && rs.getInt(1) > 0) {
                         return true;
@@ -107,14 +117,8 @@ public class Main {
             System.err.println("Error accessing database during login: " + e.getMessage());
             return false;
         }
-
-
-        System.out.println("Invalid username or password. Enter 0 to exit.");
-
-        while (true) {
-            String choice = scanner.nextLine().trim();
-            if ("0".equals(choice)) return false;
-        }
+        System.out.println("Invalid username or password.");
+        return false;
     }
 
     // Menu
@@ -237,6 +241,10 @@ public class Main {
         String password = scanner.nextLine();
 
 
+        if (firstName.isEmpty() || lastName.isEmpty()) {
+            System.out.println("First name and last name cannot be empty.");
+            return;
+        }
         String username = firstName.substring(0, Math.min(firstName.length(), 3)) + lastName;
 
         String sql = "INSERT INTO account (name, password, first_name, last_name, ssn) VALUES (?, ?, ?, ?, ?)";
